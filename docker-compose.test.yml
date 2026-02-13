@@ -1,0 +1,54 @@
+# ──────────────────────────────────────────────────
+#  Sentinel DDoS — Test Lab Docker Compose
+# ──────────────────────────────────────────────────
+# Includes a dummy target app for simulation testing.
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml up -d
+#   make attack-test
+
+version: "3.9"
+
+services:
+  # ── Sentinel Firewall ──────────────────────────
+  sentinel:
+    build: .
+    container_name: sentinel-test
+    ports:
+      - "8000:8000"
+    environment:
+      - SENTINEL_REDIS_URL=redis://redis:6379/0
+      - SENTINEL_TARGET_URL=http://target:3000
+      - SENTINEL_PROTECTION_LEVEL=rate_limit
+      - SENTINEL_LOG_LEVEL=debug
+      - SENTINEL_DEBUG=true
+    depends_on:
+      redis:
+        condition: service_healthy
+      target:
+        condition: service_started
+    networks:
+      - test-net
+
+  # ── Redis ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-test-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - test-net
+
+  # ── Dummy Target App ──────────────────────────
+  target:
+    image: nginx:alpine
+    container_name: sentinel-test-target
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge

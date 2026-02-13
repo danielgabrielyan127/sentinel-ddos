@@ -1,0 +1,14 @@
+# Sentinel DDoS — Development Dependencies
+
+-r requirements.txt
+
+# ── Testing ──────────────────────────────────────
+pytest==8.2.0
+pytest-asyncio==0.23.6
+pytest-cov==5.0.0
+
+# ── Linting ──────────────────────────────────────
+ruff==0.4.3
+
+# ── Load Testing ─────────────────────────────────
+locust==2.27.0

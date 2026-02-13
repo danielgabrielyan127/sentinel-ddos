@@ -1,0 +1,52 @@
+# ──────────────────────────────────────────────────
+#  Sentinel DDoS — Production Docker Compose
+# ──────────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+  # ── Sentinel Firewall ──────────────────────────
+  sentinel:
+    build: .
+    container_name: sentinel-ddos
+    ports:
+      - "8000:8000"
+    environment:
+      - SENTINEL_REDIS_URL=redis://redis:6379/0
+      - SENTINEL_TARGET_URL=${SENTINEL_TARGET_URL:-http://target:3000}
+      - SENTINEL_PROTECTION_LEVEL=${SENTINEL_PROTECTION_LEVEL:-monitor}
+      - SENTINEL_LOG_LEVEL=${SENTINEL_LOG_LEVEL:-info}
+      - SENTINEL_JWT_SECRET=${SENTINEL_JWT_SECRET:-change-me-in-production}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./rules:/app/rules:ro
+      - sentinel-data:/app/data
+    networks:
+      - sentinel-net
+
+  # ── Redis ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - redis-data:/data
+    networks:
+      - sentinel-net
+
+volumes:
+  sentinel-data:
+  redis-data:
+
+networks:
+  sentinel-net:
+    driver: bridge

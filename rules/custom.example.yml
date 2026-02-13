@@ -1,0 +1,32 @@
+# ──────────────────────────────────────────────────────────
+# Sentinel DDoS — Custom Protection Rules Example
+# ──────────────────────────────────────────────────────────
+# Copy this file and modify for your application.
+#
+# Available actions:
+#   monitor       — log only
+#   js_challenge  — serve JavaScript challenge page
+#   rate_limit    — enforce rate limits
+#   block         — block IP
+#   blackhole     — full block + alert
+#
+# Rate format: "<count>/<unit>"
+#   Units: second, minute, hour, day
+#
+# Duration format: "<number><unit>"
+#   Units: s (seconds), m (minutes), h (hours), d (days)
+# ──────────────────────────────────────────────────────────
+
+rules:
+  - name: "Example: Protect Admin Panel"
+    match:
+      path: "/admin/*"
+    limits:
+      per_ip: "10/minute"
+    escalation:
+      - threshold: 50
+        action: js_challenge
+      - threshold: 80
+        action: block
+        duration: "24h"
+    enabled: true

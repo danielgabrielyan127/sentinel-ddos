@@ -1,0 +1,55 @@
+# ──────────────────────────────────────────────────────────
+# Sentinel DDoS — Default Protection Rules
+# ──────────────────────────────────────────────────────────
+
+rules:
+  - name: "Global Rate Limit"
+    match:
+      path: "/*"
+    limits:
+      per_ip: "100/minute"
+      per_subnet: "1000/minute"
+    escalation:
+      - threshold: 80
+        action: rate_limit
+      - threshold: 95
+        action: block
+        duration: "10m"
+
+  - name: "API Login Protection"
+    match:
+      path: "/api/login"
+      method: "POST"
+    limits:
+      per_ip: "5/minute"
+      per_subnet: "50/minute"
+    escalation:
+      - threshold: 80
+        action: js_challenge
+      - threshold: 95
+        action: block
+        duration: "1h"
+
+  - name: "API Registration Protection"
+    match:
+      path: "/api/register"
+      method: "POST"
+    limits:
+      per_ip: "3/minute"
+      per_subnet: "30/minute"
+    escalation:
+      - threshold: 70
+        action: js_challenge
+      - threshold: 90
+        action: block
+        duration: "2h"
+
+  - name: "Static Assets — Relaxed"
+    match:
+      path: "/static/*"
+    limits:
+      per_ip: "500/minute"
+      per_subnet: "5000/minute"
+    escalation:
+      - threshold: 95
+        action: rate_limit
